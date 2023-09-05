@@ -1,15 +1,10 @@
 # First stage. Building a binary
 # -----------------------------------------------------------------------------
-FROM golang:1.18-bullseye AS builder
+FROM golang:1.18-alpine AS builder
+WORKDIR /app
 
-# Download the source code
-RUN apt-get install -y git
-RUN git clone https://github.com/Threadfin/Threadfin.git /src
+COPY . .
 
-WORKDIR /src
-
-RUN git checkout main
-RUN git pull
 RUN go mod tidy && go mod vendor
 RUN go build threadfin.go
 
@@ -68,7 +63,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN mkdir $THREADFIN_BIN
 
 # Copy built binary from builder image
-COPY --chown=${THREADFIN_UID} --from=builder [ "/src/threadfin", "${THREADFIN_BIN}/" ]
+COPY --chown=${THREADFIN_UID} --from=builder [ "/app/threadfin", "${THREADFIN_BIN}/" ]
 
 # Set binary permissions
 RUN chmod +rx $THREADFIN_BIN/threadfin
